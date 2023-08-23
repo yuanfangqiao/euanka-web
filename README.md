@@ -38,8 +38,9 @@ npm run build
 
 再构建docker镜像
 
+
 ```
-docker build -t registry.cn-shenzhen.aliyuncs.com/yuanfangqiao/euanka-web:0.1 -f Dockerfile .
+docker build --platform linux/amd64 -t registry.cn-shenzhen.aliyuncs.com/yuanfangqiao/euanka-web:0.1 -f Dockerfile .
 ```
 
 运行
