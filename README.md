@@ -1,9 +1,13 @@
 ### 项目介绍
 
 **当前这个项目的 euanaka项目的web前端。**
-**当前连接的就是euank项目的接口**
+**当前必须连接的就是euanka项目的接口**
 
 因为前面的euanka-client是树莓派，而且需要编译声卡驱动，配置声卡，再进行go和snowboy动态库的编译，很多环境限制。
+
+### 运行效果
+
+![euanka-web](./.assets/image.png)
 
 ### 先决条件
 
