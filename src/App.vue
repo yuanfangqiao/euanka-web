@@ -56,7 +56,13 @@ export default {
       recWorker: null,
       processer: null,
 
+      // 监听websocket状态定时器
       handlerInterval: null,
+      wsPingInterval: null,
+      // 监听音频播放队列定时器
+      audioInterval: null,
+      audioQueue: [],
+      playerState: 0,
 
       state: "none",
     };
@@ -66,8 +72,13 @@ export default {
       this.dots=[]
     },
     startRecording() {
-      this.recording = true;
 
+      if(this.socket == null || this.socket.readyState !== 1){
+        //打开websocket
+        this.createWebSocket();
+      }
+      
+      this.recording = true;
       //开始采集音频数据
       console.log("start to capture audio data ......");
       this.captureAudio();
@@ -75,7 +86,7 @@ export default {
     stopRecording() {
       this.recording = false;
 
-      // 发送
+      // 发送，k2 识别需要主动结束音频
       this.sendText("Done");
 
       //关闭音频
@@ -85,8 +96,13 @@ export default {
       this.removeLastEle()
     },
     closeSocket(){
-      //关闭websocket
+      // 关闭websocket
       clearInterval(this.handlerInterval);
+      // 关闭心跳
+      clearInterval(this.wsPingInterval);
+      // 关闭音频消费定时器
+      clearInterval(this.audioInterval);
+
       this.socket.close();
       this.socket = null;
     },
@@ -120,9 +136,6 @@ export default {
         this.recorder.terminate();
       };
 
-      setInterval(() => {
-        this.socket.send('ping');
-      }, 30000);
     },
     captureAudio() {
       if (
@@ -180,8 +193,7 @@ export default {
           );
         }
 
-        //打开websocket
-        this.createWebSocket();
+       
 
       } else {
         alert("You don't initialize......");
@@ -297,7 +309,30 @@ export default {
         if (audioData.length > 0) {
           this.socket.send(new Int8Array(audioData));
         }
-      }, 40); 
+      }, 50); 
+
+      // 心跳
+      this.wsPingInterval = setInterval(() => {
+        this.socket.send('ping');
+      }, 30000);
+
+      // audio队列顺序播放
+      this.audioInterval = setInterval(() => {
+        if(this.audioQueue.length !== 0 && this.playerState === 0){
+          this.playerState = 1;
+          let audioUrl = this.audioQueue.shift();
+          console.log("now player start audioUrl:",audioUrl)
+          var player = new Audio(audioUrl);
+          player.play();
+          player.addEventListener("ended", ()=>{
+            // 当前播放结束
+            this.playerState = 0;
+            console.log("now player end audioUrl:",audioUrl)
+          });
+        
+        }
+      }, 100);
+
     },
     processWsMessage(e) {
       let jsonData = JSON.parse(e.data);
@@ -314,9 +349,10 @@ export default {
         // 新开一行
         this.addChatMessage("", "received");
         this.addChatMessage(nlg, "received");
+        // 放入播放
         let audioUrl = jsonData.dm.audioUrl;
-        var player = new Audio(audioUrl);
-        player.play();
+        this.audioQueue.push(audioUrl)
+        console.log("push audioUrl:", audioUrl);
 
       } else if (jsonData.action == "error") {
         console.log("出错了:", jsonData);
