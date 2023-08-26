@@ -40,7 +40,7 @@ npm run build
 
 
 ```
-docker build --platform linux/amd64 -t registry.cn-shenzhen.aliyuncs.com/yuanfangqiao/euanka-web:0.1 -f Dockerfile .
+docker build --platform linux/amd64 -t registry.cn-shenzhen.aliyuncs.com/yuanfangqiao/euanka-web:0.2 -f Dockerfile .
 ```
 
 运行
